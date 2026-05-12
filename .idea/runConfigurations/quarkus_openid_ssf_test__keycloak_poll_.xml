@@ -1,0 +1,59 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="quarkus-openid-ssf-test (keycloak:poll)" type="QuarkusRunConfigurationType" factoryName="Quarkus">
+    <module name="quarkus-openid-ssf-test" />
+    <QsMavenRunConfiguration>
+      <MavenSettings>
+        <option name="myGeneralSettings" />
+        <option name="myRunnerSettings">
+          <MavenRunnerSettings>
+            <option name="delegateBuildToMaven" value="false" />
+            <option name="environmentProperties">
+              <map>
+                <entry key="OIDC_ISSUER_URL" value="your OIDC issuer here" />
+                <entry key="SSF_RECEIVER_CLIENT_ID" value="your ssf receiver client_id" />
+                <entry key="SSF_RECEIVER_CLIENT_SECRET" value="your ssf receiver client_secret" />
+                <entry key="SSF_RECEIVER_TRANSMITTER_ISSUER" value="your transmitter issuer here" />
+              </map>
+            </option>
+            <option name="jreName" value="#USE_PROJECT_JDK" />
+            <option name="mavenProperties">
+              <map />
+            </option>
+            <option name="passParentEnv" value="true" />
+            <option name="skipTests" value="false" />
+            <option name="vmOptions" value="" />
+          </MavenRunnerSettings>
+        </option>
+        <option name="myRunnerParameters">
+          <MavenRunnerParameters>
+            <option name="cmdOptions" />
+            <option name="profiles">
+              <set />
+            </option>
+            <option name="goals">
+              <list>
+                <option value="quarkus:dev" />
+              </list>
+            </option>
+            <option name="multimoduleDir" />
+            <option name="pomFileName" value="pom.xml" />
+            <option name="profilesMap">
+              <map />
+            </option>
+            <option name="projectsCmdOptionValues">
+              <list />
+            </option>
+            <option name="resolveToWorkspace" value="false" />
+            <option name="workingDirPath" value="$PROJECT_DIR$" />
+          </MavenRunnerParameters>
+        </option>
+      </MavenSettings>
+      <targetMavenLocalRepo />
+      <emulateTerminal>true</emulateTerminal>
+      <profile>dev</profile>
+    </QsMavenRunConfiguration>
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
