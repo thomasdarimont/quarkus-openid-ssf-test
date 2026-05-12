@@ -1,67 +1,96 @@
 # quarkus-openid-ssf-test
 
-This project uses Quarkus, the Supersonic Subatomic Java Framework.
+Example application for exercising releases of the [Quarkiverse Quarkus OpenID SSF extension](https://github.com/quarkiverse/quarkus-openid-ssf).
 
-If you want to learn more about Quarkus, please visit its website: <https://quarkus.io/>.
+It wires up `quarkus-openid-ssf-receiver` against a transmitter (e.g. Keycloak or caep.dev), captures incoming Shared Signals Framework (SSF) events into an in-memory ring buffer, and exposes them over a small REST API.
 
-## Running the application in dev mode
+## What it tests
 
-You can run your application in dev mode that enables live coding using:
+- Receiver registration against an SSF transmitter
+- `POLL` and `PUSH` delivery modes (both shown in [`application.properties`](src/main/resources/application.properties); `POLL` is the active default)
+- OAuth2 `client_credentials` outbound auth via `quarkus-oidc-client`
+- Custom `SsfEventHandler` implementation ([`CapturingSsfEventHandler`](src/main/java/com/github/thomasdarimont/training/CapturingSsfEventHandler.java))
+- Prometheus metrics exposed at `/q/metrics` via `quarkus-micrometer-registry-prometheus`
+
+Subscribed event types: `CaepSessionRevoked`, `CaepCredentialChange`.
+
+## Versions
+
+| Dependency                       | Version  |
+|----------------------------------|----------|
+| `quarkus-openid-ssf-receiver`    | `0.0.3`  |
+| Quarkus platform                 | `3.35.2` |
+| Java                             | `21`     |
+
+## Configuration
+
+The app reads its transmitter and OIDC client coordinates from environment variables — set these before starting it:
+
+| Variable                          | Purpose                                                                  |
+|-----------------------------------|--------------------------------------------------------------------------|
+| `SSF_RECEIVER_TRANSMITTER_ISSUER` | Issuer URL of the SSF transmitter to register against                    |
+| `OIDC_ISSUER_URL`                 | OIDC issuer used to obtain access tokens for outbound calls              |
+| `SSF_RECEIVER_CLIENT_ID`          | OAuth2 client id with `ssf.read` and `ssf.manage` scopes                 |
+| `SSF_RECEIVER_CLIENT_SECRET`      | OAuth2 client secret                                                     |
+| `SSF_RECEIVER_PUSH_AUTH_TOKEN`    | Optional — bearer token expected on inbound PUSH deliveries              |
+
+### Delivery modes
+
+The example ships with two delivery configurations:
+
+- **`POLL`** (active default) — the receiver polls the transmitter on a fixed interval (`10s`), drains up to 50 events per call, and auto-starts at boot. The transmitter assigns the delivery endpoint itself, so no receiver URL has to be reachable from outside.
+- **`PUSH`** (commented-out example) — the transmitter pushes SETs to a receiver-hosted endpoint. The URL set via `quarkus.openid-ssf.receiver.push.delivery-endpoint-url` is advertised to the transmitter on `createStream` and must be reachable from it (public URL / ngrok / VPN). An optional `push.delivery-auth-token` lets the receiver verify the inbound bearer token.
+
+To switch to PUSH, comment out the POLL block and uncomment the PUSH block in [`application.properties`](src/main/resources/application.properties).
+
+## Running in dev mode
 
 ```shell script
 ./mvnw quarkus:dev
 ```
 
-> **_NOTE:_**  Quarkus now ships with a Dev UI, which is available in dev mode only at <http://localhost:8080/q/dev/>.
+Quarkus Dev UI: <http://localhost:8080/q/dev/>.
 
-## Packaging and running the application
+## REST endpoints
 
-The application can be packaged using:
+| Method | Path                    | Description                                |
+|--------|-------------------------|--------------------------------------------|
+| `GET`  | `/events/recent-events` | Up to 50 most recently captured SSF events |
+| `GET`  | `/events/latest`        | The single most recent captured event      |
+| `GET`  | `/q/metrics`            | Prometheus metrics, incl. SSF receiver     |
+
+## Packaging
+
+JVM build:
 
 ```shell script
 ./mvnw package
 ```
 
-It produces the `quarkus-run.jar` file in the `target/quarkus-app/` directory.
-Be aware that it’s not an _über-jar_ as the dependencies are copied into the `target/quarkus-app/lib/` directory.
+Produces `target/quarkus-app/quarkus-run.jar`, runnable via `java -jar target/quarkus-app/quarkus-run.jar`.
 
-The application is now runnable using `java -jar target/quarkus-app/quarkus-run.jar`.
-
-If you want to build an _über-jar_, execute the following command:
+Über-jar:
 
 ```shell script
 ./mvnw package -Dquarkus.package.jar.type=uber-jar
 ```
 
-The application, packaged as an _über-jar_, is now runnable using `java -jar target/*-runner.jar`.
-
-## Creating a native executable
-
-You can create a native executable using:
+## Native executable
 
 ```shell script
 ./mvnw package -Dnative
 ```
 
-Or, if you don't have GraalVM installed, you can run the native executable build in a container using:
+Or, without a local GraalVM installation:
 
 ```shell script
 ./mvnw package -Dnative -Dquarkus.native.container-build=true
 ```
 
-You can then execute your native executable with: `./target/quarkus-openid-ssf-test-1.0-SNAPSHOT-runner`
+Then run `./target/quarkus-openid-ssf-test-1.0-SNAPSHOT-runner`. See <https://quarkus.io/guides/maven-tooling> for details.
 
-If you want to learn more about building native executables, please consult <https://quarkus.io/guides/maven-tooling>.
+## References
 
-## Related Guides
-
-- RESTEasy Classic ([guide](https://quarkus.io/guides/resteasy)): REST endpoint framework implementing Jakarta REST and
-  more
-
-## Provided Code
-
-### RESTEasy JAX-RS
-
-Easily start your RESTful Web Services
-
-[Related guide section...](https://quarkus.io/guides/getting-started#the-jax-rs-resources)
+- Extension: <https://github.com/quarkiverse/quarkus-openid-ssf>
+- OpenID Shared Signals Framework: <https://openid.net/specs/openid-sharedsignals-framework-1_0.html>
+- Quarkus: <https://quarkus.io/>
