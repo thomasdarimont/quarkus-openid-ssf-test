@@ -9,8 +9,8 @@ It wires up `quarkus-openid-ssf-receiver` against a transmitter (e.g. Keycloak o
 - Receiver registration against an SSF transmitter
 - `POLL` and `PUSH` delivery modes (both shown in [`application.properties`](src/main/resources/application.properties); `POLL` is the active default)
 - OAuth2 `client_credentials` outbound auth via `quarkus-oidc-client`
-- Custom `SsfEventHandler` implementation ([`CapturingSsfEventHandler`](src/main/java/com/github/thomasdarimont/training/CapturingSsfEventHandler.java))
-- Prometheus metrics exposed at `/q/metrics` via `quarkus-micrometer-registry-prometheus`
+- Custom `SsfEventHandler` implementation ([`CapturingSsfEventHandler`](src/main/java/com/github/thomasdarimont/training/CapturingSsfEventHandler.java)); since 0.2.0 the handler types are those of [easyssf](https://github.com/easyssf/easyssf), the receiver library the extension is built on
+- Prometheus metrics exposed at `/q/metrics` via `quarkus-micrometer-registry-prometheus` (`easyssf.receiver.*` meters)
 
 Subscribed event types: `CaepSessionRevoked`, `CaepCredentialChange`.
 
@@ -18,7 +18,7 @@ Subscribed event types: `CaepSessionRevoked`, `CaepCredentialChange`.
 
 | Dependency                       | Version  |
 |----------------------------------|----------|
-| `quarkus-openid-ssf-receiver`    | `0.0.3`  |
+| `quarkus-openid-ssf-receiver`    | `0.2.0`  |
 | Quarkus platform                 | `3.35.2` |
 | Java                             | `21`     |
 
@@ -32,14 +32,14 @@ The app reads its transmitter and OIDC client coordinates from environment varia
 | `OIDC_ISSUER_URL`                 | OIDC issuer used to obtain access tokens for outbound calls              |
 | `SSF_RECEIVER_CLIENT_ID`          | OAuth2 client id with `ssf.read` and `ssf.manage` scopes                 |
 | `SSF_RECEIVER_CLIENT_SECRET`      | OAuth2 client secret                                                     |
-| `SSF_RECEIVER_PUSH_AUTH_TOKEN`    | Optional — bearer token expected on inbound PUSH deliveries              |
+| `SSF_RECEIVER_PUSH_AUTH_TOKEN`    | Optional — bearer token expected on inbound PUSH deliveries (`push.expected-auth-header`) |
 
 ### Delivery modes
 
 The example ships with two delivery configurations:
 
-- **`POLL`** (active default) — the receiver polls the transmitter on a fixed interval (`10s`), drains up to 50 events per call, and auto-starts at boot. The transmitter assigns the delivery endpoint itself, so no receiver URL has to be reachable from outside.
-- **`PUSH`** (commented-out example) — the transmitter pushes SETs to a receiver-hosted endpoint. The URL set via `quarkus.openid-ssf.receiver.push.delivery-endpoint-url` is advertised to the transmitter on `createStream` and must be reachable from it (public URL / ngrok / VPN). An optional `push.delivery-auth-token` lets the receiver verify the inbound bearer token.
+- **`POLL`** (active default) — the receiver polls the transmitter on a fixed interval (`10s`), fetches up to 50 events per call and keeps fetching while the transmitter reports more, and auto-starts at boot. The transmitter assigns the delivery endpoint itself, so no receiver URL has to be reachable from outside.
+- **`PUSH`** (commented-out example) — the transmitter pushes SETs to a receiver-hosted endpoint. The URL set via `quarkus.openid-ssf.receiver.push.delivery-endpoint-url` is advertised to the transmitter on `createStream` and must be reachable from it (public URL / ngrok / VPN). An optional `push.expected-auth-header` is registered with the stream and lets the receiver verify the `Authorization` header of inbound pushes.
 
 To switch to PUSH, comment out the POLL block and uncomment the PUSH block in [`application.properties`](src/main/resources/application.properties).
 

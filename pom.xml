@@ -35,7 +35,7 @@
         <dependency>
             <groupId>io.quarkiverse.openid-ssf</groupId>
             <artifactId>quarkus-openid-ssf-receiver</artifactId>
-            <version>0.0.3</version>
+            <version>0.2.0</version>
         </dependency>
 
         <dependency>
@@ -51,11 +51,10 @@
             <artifactId>quarkus-arc</artifactId>
         </dependency>
         <!--
-            quarkus-oidc-client is needed for the `keycloak` profile, where the
-            transmitter requires an OAuth client_credentials grant. The default
-            (caep.dev) profile uses quarkus.openid-ssf.receiver.transmitter-access-token instead;
-            in that case the deployment processor skips OIDC even though the dep
-            is on the classpath.
+            quarkus-oidc-client authenticates the receiver at the transmitter with the
+            client_credentials grant of quarkus.oidc-client.*. Without a configured
+            quarkus.openid-ssf.receiver.oauth2.token-endpoint and without a static
+            transmitter-access-token, the extension picks the OIDC client at runtime.
         -->
         <dependency>
             <groupId>io.quarkus</groupId>
@@ -64,8 +63,8 @@
         <!--
             Pulls in quarkus-micrometer transitively, which makes the
             io.quarkus.micrometer build capability visible to the deployment
-            processor. The processor then registers MicrometerSsfReceiverMetrics
-            so the quarkus.openid-ssf.receiver.* meters land on MeterRegistry. Metrics are
+            processor. The processor then registers easyssf's Micrometer metrics, so
+            the easyssf.receiver.* meters land on the MeterRegistry. Metrics are
             scrapable at /q/metrics in Prometheus text format.
         -->
         <dependency>
